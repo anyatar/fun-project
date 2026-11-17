@@ -1,0 +1,70 @@
+# Example requests (VS Code "REST Client" or JetBrains HTTP client).
+# Amounts are integer minor units: 1050 = 10.50.
+# Run top to bottom; replace the ids with the ones returned by earlier responses.
+
+@base = http://localhost:3000/api
+@merchantId = 00000000-0000-0000-0000-000000000000
+@walletId = 00000000-0000-0000-0000-000000000000
+@chargeId = 00000000-0000-0000-0000-000000000000
+
+### Create a merchant
+POST {{base}}/merchants
+Content-Type: application/json
+
+{ "name": "Acme Coffee" }
+
+### List merchants
+GET {{base}}/merchants
+
+### Get a merchant
+GET {{base}}/merchants/{{merchantId}}
+
+### Deactivate / activate a merchant
+PATCH {{base}}/merchants/{{merchantId}}/status
+Content-Type: application/json
+
+{ "status": "INACTIVE" }
+
+### Create a wallet with an opening balance of 100.00 ILS
+POST {{base}}/wallets
+Content-Type: application/json
+
+{ "merchantId": "{{merchantId}}", "currency": "ILS", "initialBalance": 10000 }
+
+### List wallets
+GET {{base}}/wallets
+
+### Get a wallet (includes balance)
+GET {{base}}/wallets/{{walletId}}
+
+### Deactivate / activate a wallet
+PATCH {{base}}/wallets/{{walletId}}/status
+Content-Type: application/json
+
+{ "status": "ACTIVE" }
+
+### Charge 50.00 ILS (201 approved, 422 declined)
+POST {{base}}/transactions/charge
+Content-Type: application/json
+Idempotency-Key: order-1001
+
+{ "merchantId": "{{merchantId}}", "walletId": "{{walletId}}", "amount": 5000, "currency": "ILS" }
+
+### Partial refund of 20.00 ILS
+POST {{base}}/transactions/refund
+Content-Type: application/json
+Idempotency-Key: refund-1001-a
+
+{ "originalTransactionId": "{{chargeId}}", "amount": 2000 }
+
+### Refund whatever remains (amount omitted)
+POST {{base}}/transactions/refund
+Content-Type: application/json
+
+{ "originalTransactionId": "{{chargeId}}" }
+
+### List transactions, optionally filtered
+GET {{base}}/transactions?walletId={{walletId}}
+
+### Get a transaction
+GET {{base}}/transactions/{{chargeId}}
